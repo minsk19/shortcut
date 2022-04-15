@@ -14,13 +14,13 @@ Chrome
 C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
 yahoo
 https://www.yahoo.co.jp/
-メモ
+メモ　test
 C:\dev\shortcut\file\メモ.txt
 長いパスサンプル1 $long
 C:\dev\shortcut\file\dir1\dir------------too-long----------------------path1
 長いパスサンプル2 $long
 C:\dev\shortcut\file\dir1\dir------------too-long----------------------path2
-テスト
+テスト　test
 C:\dev\shortcut\file\dir1\テスト
 google
 https://www.google.com/

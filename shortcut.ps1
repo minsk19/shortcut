@@ -1,38 +1,42 @@
 ﻿#文字コード：UTF-8 with BOM
-#MacのSpotlightとかalfredみたいな機能をDaaSで使いたい
+
 
 ######################設定######################
+#設定ファイル
+$config_file_name_1 = "shortcut.txt"
+
 ##表示設定
-#長い行の表示設定
+###長い行の表示設定
 $maxlength = 100
 $display_right = 40
 $display_left = 10
-#表示結果にパスタイトルを含めるか
+###表示結果にパスタイトルを含めるか
 $display_title = $TRUE
 
 ##アプリケーションのパス設定
-#sakura
+###sakuraエディタ
 $sakura = "C:\Program Files (x86)\sakura\sakura.exe"
 
 ######################プログラム######################
 
 #バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
 #これを呼び出したときの第1引数にtrueを指定されていたらPowershellで開かれているものとする
-if($Args[0] -ne "true"){
-    start-process powershell -ArgumentList ("./shortcut.ps1","true")
-    exit
-}
+#無効化するなら4行をコメントアウト
+#if($Args[0] -ne "true"){
+#    start-process powershell -ArgumentList ("./shortcut.ps1","true")
+#    exit
+#}
 
 
 #設定ファイルの読み込みとこのスクリプトがある場所をカレントディレクトリにする
-$this_path = Split-Path -Parent $MyInvocation.MyCommand.Path
-$configfileName = $this_path + "\shortcut.txt"
-Set-Location $this_path
+$current_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$configfilepath_1 = $current_dir + "\" + $config_file_name_1
+Set-Location $current_dir
 
 function reloadconfig(){
     #Write-Output "reloadconfig"
-    #Write-Output $configfileName
-    $lines = Get-Content -Encoding "UTF8" $configfileName
+    #Write-Output $configfilepath_1
+    $lines = Get-Content -Encoding "UTF8" $configfilepath_1
     if(($lines.length) % 2 -eq 1){
         $lines += "#"
         "設定ファイルにフォーマットエラー"
@@ -51,7 +55,7 @@ while(1){
     }
     #設定ファイルをサクラエディタで開く
     if($input -eq "#edit"){
-        start-process $sakura -ArgumentList "shortcut.txt"
+        start-process $sakura -ArgumentList $configfilepath_1
     }
 
     #新しいウィンドウで開く
@@ -62,8 +66,8 @@ while(1){
     #デバッグ用 設定ファイルの表示
     if($input -eq "#show"){
         Write-Output "-----変数&環境設定-----"
-        Write-Output ("このスクリプトのパス&カレントディレクトリ"+$this_path)
-        Write-Output ("configfileName     "+$configfileName)
+        Write-Output ("このスクリプトのパス&カレントディレクトリ"+$current_dir)
+        Write-Output ("configfilepath_1     "+$configfilepath_1)
         Write-Output ("Input              "+$Input)
         Write-Output ("path               "+$path)
         Write-Output ("maxlength          "+$maxlength)
