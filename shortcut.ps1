@@ -1,9 +1,15 @@
 ﻿#文字コード：UTF-8 with BOM
-
+#This project is hosted at GitHub: https://github.com/minsk19/shortcut
+#version2 2022/4/21
 
 ######################設定######################
-#設定ファイル
+#設定ファイル名
 $config_file_name_1 = "shortcut.txt"
+
+#外観設定
+##ウィンドウ設定
+###バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
+$window_powershell = $FALSE #$TRUE→Powershellの青いウィンドウ $FLASE→コマンドプロンプトの黒い画面
 
 ##表示設定
 ###長い行の表示設定
@@ -13,20 +19,28 @@ $display_left = 10
 ###表示結果にパスタイトルを含めるか
 $display_title = $TRUE
 
+## Tablacus Explorerとの連携
+$tablacus = $FALSE #TRUE→Tablacus Explorerでフォルダを開く FLASE→標準エクスプローラーでフォルダを開く
+#これを$TRUEにするなら$tablacus_exeに実行ファイルの場所を登録する
+
 ##アプリケーションのパス設定
 ###sakuraエディタ
 $sakura = "C:\Program Files (x86)\sakura\sakura.exe"
+###Tablacus Explorer (任意)
+$tablacus_exe = "C:\dev\te220411\TE64.exe"
+
+######################設定ここまで######################
+
 
 ######################プログラム######################
 
-#バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
-#これを呼び出したときの第1引数にtrueを指定されていたらPowershellで開かれているものとする
-#無効化するなら4行をコメントアウト
-#if($Args[0] -ne "true"){
-#    start-process powershell -ArgumentList ("./shortcut.ps1","true")
-#    exit
-#}
-
+if($window_powershell){
+    if($Args[0] -ne "true"){
+        $script_name = $myInvocation.MyCommand.name
+        start-process powershell -ArgumentList ("./"+$script_name,"true")
+        exit
+    }
+}
 
 #設定ファイルの読み込みとこのスクリプトがある場所をカレントディレクトリにする
 $current_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -60,7 +74,8 @@ while(1){
 
     #新しいウィンドウで開く
     if($input -eq "#restart"){
-        start-process powershell -ArgumentList ("./shortcut.ps1","true")
+        $script_name = $myInvocation.MyCommand.name
+        start-process powershell -ArgumentList ("./"+$script_name,"true")
         exit
     }
     #デバッグ用 設定ファイルの表示
@@ -102,6 +117,7 @@ while(1){
         #全角スペースを半角にしてAND検索できるように配列keyに入れる
         $Input = $Input.Replace("　"," ")
         $key = $Input -split " "
+        
         for($idx=0;$idx -lt $lines.Length;$idx = $idx+2){
             if($lines[$idx] -notlike "#*"){
                 #コメントアウトは飛ばす
@@ -166,17 +182,27 @@ while(1){
             #何も入力がなかったら1が入力されたとする
             $Input = 1
         }
-
         if($Input -match "^\d{1,}$"){
-            #数字だった場合は規定のプログラムで開く
+            #数字だった場合は規定のプログラム or Tablacus Explorerで開く
             #ただしURLの場合は規定のプログラムを無視してchromeで開く
             if($result.length -ge ([int]$Input*2)){
                 #入力値が結果の数以下を確認する
                 $path = $result[($Input-1)*2+1]
+
                 if($path -match "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"){
                     start-process chrome -ArgumentList $path
                 }else{
-                    start-process $path
+                    $item = Get-Item $path
+                    if($tablacus){#tablacusで開く
+                        if($item.PSIsContainer){#pathがフォルダの場合
+                            start-process $tablacus_exe -ArgumentList $path
+                        }else{                  #pathがファイルの場合
+                            #Tablacusの引数に入れてもファイルは開かないのでデフォルトアプリで開く
+                            start-process $path
+                        }
+                    }else{#標準エクスプローラーで開く
+                        start-process $path
+                    }
                 }
                 #explorer.exe $path #なんかこれだと遅い気がする
             }else{
@@ -191,8 +217,6 @@ while(1){
         }elseif($Input -match "^ps\s\d{1,}$"){
             #開くアプリケーション指定(Powershellで開く)
             #もしファイルならそのファイルがあるフォルダを開く(未実装)
-            #    #考え中
-                 #正規表現で\....拡張子 を消す
             $Input = $Input.Substring(3,1)
             $tmp = "-Noexit -command `"Get-Date;cd `'"
             $tmp += $result[($Input-1)*2+1]
