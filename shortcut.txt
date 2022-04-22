@@ -1,30 +1,83 @@
 ﻿#文字コード：UTF-8 with BOM
-#スキップ
-#奇数行にパスタイトル
-#偶数行にパス
-#AND検索ができるようにするにはパスタイトルを「 」で区切る
-#例↓
-#メモ
-#C:\dev\shortcut\file\メモ.txt
+#これが設定ファイル
 #
-#必ず奇数行から始める
+#で始まっていればコメントアウトになる。
+#
+#######################################################################################
+########編集ルール
+#######################################################################################
+#検索に引っかかって欲しいキーワード
+#そのファイルパス
+#を2行セットで書く。
+#例↓
+フォルダ1
+C:\dev\shortcut\file\dir1
+#これで「フォルダ1」で検索すると「C:\dev\shortcut\file\dir1」が候補に表示される。
+#※奇数行・偶数行の縛りはなくなった(version2から)。
+#
+#どこかの行に半角or全角スペースだけの行があるとバグる可能性があるので禁止
+#空行はたぶんOK
+#
+#######################################################################################
+########編集ルール(応用)
+#######################################################################################
+#AND検索ができるようにするにはキーワードを半角スペースで区切る
+#例↓
+メモ memo
+C:\dev\shortcut\file\メモ.txt
+#
+#$より右のキーワードは検索には引っかかるが表示はされない
+#例↓
+打ち合わせ $mtg
+C:\dev\shortcut\file\dir1\test.txt
+#
+#ファイルやフォルダだけではなく実行ファイルも登録できる
+#例↓
 sakura
 C:\Program Files (x86)\sakura\sakura.exe
 Chrome
 C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
-yahoo
+#
+#URLも登録できる。Chromeで開ける。
+Yahoo
 https://www.yahoo.co.jp/
-メモ　test
+#UWPアプリの登録参考
+#https://www.vwnet.jp/Windows/PowerShell/StartUWP.htm
+アラーム　alarm
+shell:AppsFolder\Microsoft.WindowsAlarms_8wekyb3d8bbwe!App
+#######################################################################################
+これより下はデバッグ用
+#######################################################################################
+メモ memo
 C:\dev\shortcut\file\メモ.txt
+#
 長いパスサンプル1 $long
 C:\dev\shortcut\file\dir1\dir------------too-long----------------------path1
 長いパスサンプル2 $long
 C:\dev\shortcut\file\dir1\dir------------too-long----------------------path2
-テスト　test
+テスト $test
 C:\dev\shortcut\file\dir1\テスト
-google
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\ディレクトリ名に全角スペース　がある
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\ディレクトリ名に半角スペース がある
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\ファイル名に全角スペース 　がある.txt
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\ファイル名に半角スペース がある.txt
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\Excelファイル.xlsx
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\インターネット ショートカット.url
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\存在しないディレクトリ
+テスト $test
+C:\dev\shortcut\file\dir1\テスト\存在しないファイル.txt
+テスト $test
 https://www.google.com/
-#UWPアプリの実行方法
-#https://www.vwnet.jp/Windows/PowerShell/StartUWP.htm
-アラーム　alarm
-shell:AppsFolder\Microsoft.WindowsAlarms_8wekyb3d8bbwe!App
+テスト $test
+Z:\ネットワーク上のファイル.txt
+テスト dir2 $test
+C:\dev\shortcut\file\dir1\dir2
+テスト ファイル2 $test
+C:\dev\shortcut\file\dir1\テスト\ファイル2.txt

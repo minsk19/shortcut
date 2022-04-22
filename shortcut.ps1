@@ -1,6 +1,6 @@
 ﻿#文字コード：UTF-8 with BOM
 #This project is hosted at GitHub: https://github.com/minsk19/shortcut
-#version2 2022/4/21
+#version2 2022/4/22
 
 ######################設定######################
 #設定ファイル名
@@ -9,7 +9,9 @@ $config_file_name_1 = "shortcut.txt"
 #外観設定
 ##ウィンドウ設定
 ###バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
-$window_powershell = $FALSE #$TRUE→Powershellの青いウィンドウ $FLASE→コマンドプロンプトの黒い画面
+$window_powershell = $FALSE 
+#                    $TRUE→Powershellの青いウィンドウ
+#                    $FLASE→コマンドプロンプトの黒い画面
 
 ##表示設定
 ###長い行の表示設定
@@ -20,7 +22,9 @@ $display_left = 10
 $display_title = $TRUE
 
 ## Tablacus Explorerとの連携
-$tablacus = $FALSE #TRUE→Tablacus Explorerでフォルダを開く FLASE→標準エクスプローラーでフォルダを開く
+$tablacus = $TRUE
+#           $TRUE→Tablacus Explorerでフォルダを開く
+#           $FLASE→標準エクスプローラーでフォルダを開く
 #これを$TRUEにするなら$tablacus_exeに実行ファイルの場所を登録する
 
 ##アプリケーションのパス設定
@@ -32,7 +36,7 @@ $tablacus_exe = "C:\dev\te220411\TE64.exe"
 ######################設定ここまで######################
 
 
-######################プログラム######################
+######################プログラム########################
 
 if($window_powershell){
     if($Args[0] -ne "true"){
@@ -51,10 +55,6 @@ function reloadconfig(){
     #Write-Output "reloadconfig"
     #Write-Output $configfilepath_1
     $lines = Get-Content -Encoding "UTF8" $configfilepath_1
-    if(($lines.length) % 2 -eq 1){
-        $lines += "#"
-        "設定ファイルにフォーマットエラー"
-    }
 }
 . reloadconfig #ドットソースで処理を呼び出すと、呼出元と呼出先の変数のスコープが同一となるため
 
@@ -62,22 +62,42 @@ while(1){
     #####キーワード入力#####
     $result = @()
     $Input = Read-Host ">>"
-
-    #設定ファイルの再読み込み
+    #特殊コマンド:設定ファイルの再読み込み
     if($input -eq "#reload"){
         . reloadconfig
     }
-    #設定ファイルをサクラエディタで開く
+    #特殊コマンド:設定ファイルをサクラエディタで開く
     if($input -eq "#edit"){
         start-process $sakura -ArgumentList $configfilepath_1
     }
 
-    #新しいウィンドウで開く
+    #特殊コマンド:新しいウィンドウで開く
     if($input -eq "#restart"){
         $script_name = $myInvocation.MyCommand.name
         start-process powershell -ArgumentList ("./"+$script_name,"true")
         exit
     }
+
+    #特殊コマンド:設定ファイルに追記
+    if($input -eq "#add"){
+        Write-Output "設定ファイルの末尾に追記"
+        $add_key = Read-Host "キーワードを入力>>"
+        $add_path = Read-Host "パスを入力>>"
+        Write-Output "この内容を設定ファイルに追記しますか？"
+        Write-Output "キーワード↓"$add_key
+        Write-Output "パス↓"$add_path
+        $ok = Read-Host "[y or n]"
+        if($ok -eq "y"){
+            . reloadconfig
+            $temp="`r`n"
+            $temp=$temp+"#####Added at "+(Get-Date -U “%Y%m%d_%H%M”)+ "`r`n"
+            $temp=$temp+$add_key+ "`r`n"+$add_path
+            Write-Output $temp | Add-Content $configfilepath_1 -Encoding "UTF8"
+            . reloadconfig
+            Write-Output "追記完了"
+        }
+    }
+
     #デバッグ用 設定ファイルの表示
     if($input -eq "#show"){
         Write-Output "-----変数&環境設定-----"
@@ -94,12 +114,12 @@ while(1){
         Write-Output $lines
         $Input = ""
     }
-    #特殊コマンド
-    #googleで検索
-    if($Input -match "google*"){
+
+    #特殊コマンド:googleで検索
+    if($Input -match "#google*"){
         #googleで検索
-        if($Input -ne "google"){
-            $arg = "https://www.google.com/search?q=" + $Input.Substring(7,$Input.length-7)
+        if($Input -ne "#google"){
+            $arg = "https://www.google.com/search?q=" + $Input.Substring(8,$Input.length-8)
             $arg = $arg.Replace("　","+")
             $arg = $arg.Replace(" ","+")
             start-process chrome -ArgumentList ($arg)
@@ -118,22 +138,30 @@ while(1){
         $Input = $Input.Replace("　"," ")
         $key = $Input -split " "
         
-        for($idx=0;$idx -lt $lines.Length;$idx = $idx+2){
-            if($lines[$idx] -notlike "#*"){
-                #コメントアウトは飛ばす
-                #and検索をする
+        for($idx=0;$idx -lt $lines.Length;$idx = $idx+1){
+            # Write-Output $lines[$idx]
+            if(($lines[$idx] -like "#*") -Or (($lines[$idx] -eq ""))){
+                #コメントアウトor空行の行は飛ばす
+                #なにもしない
+            }else{
+                #コメントアウトでない行は
+                #AND検索して(keyの文字列が設定ファイルの各行にあるかどうかを調べる)
+                #もしヒットすれば配列$resultの偶数個目にキーワード、奇数個目にそのファイルパスの順に格納していく
+                #AND検索する
                 $flag = $TRUE #最後までtrueならヒット
                 $l = $lines[$idx]
-                for($i=0;$i -lt $key.length;$i++){
+                for($i=0;$i -lt $key.length;$i++){#and検索
                     if($l -notlike "*"+[string]$key[$i]+"*"){
                         $flag = $FALSE
                         break
                     }
                 }
+                #検索にヒットしたら結果を格納する
                 if($flag){
                     $result += $lines[$idx]
                     $result += $lines[$idx+1]
                 }
+                $idx = $idx+1
             }
         }
     }
@@ -178,7 +206,8 @@ while(1){
         $Input = [regex]::replace($Input,"[０-９]", { $args.value[0] - 65248 -as "char" })
         #入力値チェック
 
-        if($Input -eq""){
+
+        if($Input -eq ""){
             #何も入力がなかったら1が入力されたとする
             $Input = 1
         }
@@ -209,15 +238,16 @@ while(1){
                 Write-Output "error"
             }
         }elseif($Input -match "^cl\s\d{1,}$"){
+        #開くアプリケーションを指定した場合
             #開くアプリケーション指定(クリップボード貼り付け)
-            $Input = $Input.Substring(3,1)
+            $Input = $Input.Substring(3,$Input.length-3)
             $path = $result[($Input-1)*2+1]
             Set-Clipboard $path
             Write-Output ("copied>>"+$path)
         }elseif($Input -match "^ps\s\d{1,}$"){
             #開くアプリケーション指定(Powershellで開く)
             #もしファイルならそのファイルがあるフォルダを開く(未実装)
-            $Input = $Input.Substring(3,1)
+            $Input = $Input.Substring(3,$Input.length-3)
             $tmp = "-Noexit -command `"Get-Date;cd `'"
             $tmp += $result[($Input-1)*2+1]
             $tmp += "`';"
@@ -229,7 +259,13 @@ while(1){
             start-process powershell -ArgumentList $tmp
         }elseif($Input -match "^ie\s\d{1,}$"){
             #開くアプリケーション指定(デフォルトブラウザ(IE)で開く)
-            $Input = $Input.Substring(3,1)
+            $Input = $Input.Substring(3,$Input.length-3)
+            $tmp = $result[($Input-1)*2+1]
+            start-process $tmp
+        }elseif($Input -match "^ex\s\d{1,}$"){
+            #開くアプリケーション指定(デフォルトアプリで開く)
+            # $tablacus=$TRUE にしているときに今だけエクスプローラーで開きたい時用
+            $Input = $Input.Substring(3,$Input.length-3)
             $tmp = $result[($Input-1)*2+1]
             start-process $tmp
         }else{
