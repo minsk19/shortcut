@@ -22,7 +22,7 @@ $display_left = 10
 $display_title = $TRUE
 
 ## Tablacus Explorerとの連携
-$tablacus = $TRUE
+$tablacus = $FLASE
 #           $TRUE→Tablacus Explorerでフォルダを開く
 #           $FLASE→標準エクスプローラーでフォルダを開く
 #これを$TRUEにするなら$tablacus_exeに実行ファイルの場所を登録する
