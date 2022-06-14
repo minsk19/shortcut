@@ -1,0 +1,6 @@
+#エイリアス設定ファイル
+#「,」で区切る
+打合せ,打合わせ,打ち合わせ,打合せ
+Kubernetes,k8s
+RH,Red Hat,レッドハット
+ARO,Azure Red Hat OpenShift

@@ -41,15 +41,21 @@ C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
 #URLも登録できる。Chromeで開ける。
 Yahoo
 https://www.yahoo.co.jp/
+#エイリアス設定ファイルでKubernetes,k8sと書けば、k8sと検索してもこれはヒットする
+Kubernetes ドキュメント
+https://kubernetes.io/ja/docs/home/
 #UWPアプリの登録参考
 #https://www.vwnet.jp/Windows/PowerShell/StartUWP.htm
 アラーム　alarm
 shell:AppsFolder\Microsoft.WindowsAlarms_8wekyb3d8bbwe!App
 #######################################################################################
-これより下はデバッグ用
+#これより下はデバッグ用
 #######################################################################################
 メモ memo
 C:\dev\shortcut\file\メモ.txt
+#エイリアス設定ファイルで「ARO,Azure Red Hat OpenShift」と書けば、aroと検索してもこれはヒットする
+Microsoft Azure Red Hat OpenShift ドキュメント
+https://docs.microsoft.com/ja-jp/azure/openshift/
 #
 長いパスサンプル1 $long
 C:\dev\shortcut\file\dir1\dir------------too-long----------------------path1

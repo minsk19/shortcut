@@ -6,6 +6,9 @@
 #設定ファイル名
 $config_file_name_1 = "shortcut.txt"
 
+#エイリアス設定ファイル名
+$alias_file_name = "alias.txt"
+
 #外観設定
 ##ウィンドウ設定
 ###バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
@@ -37,6 +40,7 @@ $tablacus_exe = "C:\dev\te220411\TE64.exe"
 
 
 ######################プログラム########################
+$lines = @()
 
 if($window_powershell){
     if($Args[0] -ne "true"){
@@ -51,11 +55,65 @@ $current_dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $configfilepath_1 = $current_dir + "\" + $config_file_name_1
 Set-Location $current_dir
 
+$aliasfilepath = $current_dir + "\" + $alias_file_name
+
 function reloadconfig(){
+    $lines.clear()
     #Write-Output "reloadconfig"
     #Write-Output $configfilepath_1
-    $lines = Get-Content -Encoding "UTF8" $configfilepath_1
+    $lines_origin = Get-Content -Encoding "UTF8" $configfilepath_1
+
+    #エイリアスとコメントアウト行の処理
+    $lines_alias = Get-Content -Encoding "UTF8" $aliasfilepath
+    for($idx=0;$idx -lt $lines_origin.Length;$idx = $idx+1){
+        # Write-Output $lines[$idx]
+        if(($lines_origin[$idx] -like "#*") -Or (($lines_origin[$idx] -eq ""))){
+            #コメントアウトor空行の行は飛ばす
+            #なにもしない
+        }else{
+            #コメントアウトでない行は
+            #各ファイル名の行とエイリアス設定と突合する
+            for($idx2=0;$idx2 -lt $lines_alias.Length;$idx2 = $idx2+1){
+                #もし$lines[$idx]の中にlines_alias[$idx2]の文字が含まれていたら、lにlines_alias[$idx]を追加
+                $alias = $lines_alias[$idx2] -split ","
+                for($idx3=0;$idx3 -lt $alias.Length;$idx3 = $idx3+1){
+                    if($lines_origin[$idx].Contains($alias[$idx3]) -and ($alias[$idx3] -ne "")){
+                        $lines_origin[$idx] = $lines_origin[$idx] + " $ " +$lines_alias[$idx2]
+                        break
+                    }
+                }
+            }
+            $lines += $lines_origin[$idx]
+            $lines += $lines_origin[$idx+1]
+            $idx = $idx+1
+        }
+    }
+    $lines_origin.clear()
 }
+
+function check(){
+    Write-Output "存在しないフォルダ または ファイルの一覧"
+    $lines_origin = Get-Content -Encoding "UTF8" $configfilepath_1
+
+    for($idx=0;$idx -lt $lines_origin.Length;$idx = $idx+1){
+        if(($lines_origin[$idx] -like "#*") -Or (($lines_origin[$idx] -eq ""))){
+            #コメントアウトor空行の行は飛ばす
+            #なにもしない
+        }else{
+            $path = $lines_origin[$idx+1]
+            if((Test-Path $path) -or ($path -match "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+")){
+                # Write-Output "ファイルはあった" + $path
+            }else{
+                $gyo = $idx +1
+                Write-Output "$gyo 行目"
+                Write-Output $lines_origin[$idx]
+                Write-Output $lines_origin[$idx+1]
+            }
+            $idx = $idx +1
+        }
+    }
+}
+
 . reloadconfig #ドットソースで処理を呼び出すと、呼出元と呼出先の変数のスコープが同一となるため
 
 while(1){
@@ -68,7 +126,15 @@ while(1){
     }
     #特殊コマンド:設定ファイルをサクラエディタで開く
     if($input -eq "#edit"){
+        Write-Output "設定ファイルを開く"
+        Write-Output "編集後は#reloadコマンドを実行すべし"
         start-process $sakura -ArgumentList $configfilepath_1
+    }
+
+    if($input -eq "#alias"){
+        Write-Output "エイリアス設定を開く"
+        Write-Output "編集後は#reloadコマンドを実行すべし"
+        start-process $sakura -ArgumentList $aliasfilepath
     }
 
     #特殊コマンド:新しいウィンドウで開く
@@ -97,6 +163,10 @@ while(1){
             Write-Output "追記完了"
         }
     }
+    #特殊コマンド:ファイルの存在チェック
+    if($input -eq "#check"){
+        . check
+    }
 
     #デバッグ用 設定ファイルの表示
     if($input -eq "#show"){
@@ -110,7 +180,7 @@ while(1){
         Write-Output ("display_left       "+$display_left)
         $tmp = Get-ExecutionPolicy
         Write-Output ("Get-ExecutionPolicy "+$tmp)
-        Write-Output "-----設定ファイル-----"
+        Write-Output "-----設定ファイル-----lines"
         Write-Output $lines
         $Input = ""
     }
@@ -176,7 +246,7 @@ while(1){
                 #$display_titleがtrueのとき結果表示にパスタイトルを表示する
                 $out = $out + [string]$result[$idx] + "`r`n"
                 if($out.LastIndexOf("$") -ge 1){
-                    $out = $out.Remove($out.LastIndexOf("$"),$out.length - $out.LastIndexOf("$"))+ "`r`n"
+                    $out = $out.Remove($out.IndexOf("$"),$out.length - $out.IndexOf("$"))+ "`r`n"
                 }
                 $space = "   "
                 if(($idx/2 + 1) -ge 10){
