@@ -14,6 +14,8 @@ URL:https://github.com/minsk19/shortcut
 1. README.md
 
 * このファイル
+  * このファイル
+ このファイル
 
 2. shortcut.bat
 
