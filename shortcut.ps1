@@ -1,45 +1,13 @@
 ﻿#文字コード：UTF-8 with BOM
 #This project is hosted at GitHub: https://github.com/minsk19/shortcut
-#version2 2022/4/22
+#version2.1 2022/6/16
 
-######################設定######################
-#設定ファイル名
-$config_file_name_1 = "shortcut.txt"
-
-#エイリアス設定ファイル名
-$alias_file_name = "alias.txt"
-
-#外観設定
-##ウィンドウ設定
-###バッチファイルから起動した時はウインドウがコマンドプロンプトのままでダサいのでPowershellのウインドウで開くようにする
-$window_powershell = $FALSE 
-#                    $TRUE→Powershellの青いウィンドウ
-#                    $FLASE→コマンドプロンプトの黒い画面
-
-##表示設定
-###長い行の表示設定
-$maxlength = 100
-$display_right = 40
-$display_left = 10
-###表示結果にパスタイトルを含めるか
-$display_title = $TRUE
-
-## Tablacus Explorerとの連携
-$tablacus = $FLASE
-#           $TRUE→Tablacus Explorerでフォルダを開く
-#           $FLASE→標準エクスプローラーでフォルダを開く
-#これを$TRUEにするなら$tablacus_exeに実行ファイルの場所を登録する
-
-##アプリケーションのパス設定
-###sakuraエディタ
-$sakura = "C:\Program Files (x86)\sakura\sakura.exe"
-###Tablacus Explorer (任意)
-$tablacus_exe = "C:\dev\te220411\TE64.exe"
-
-######################設定ここまで######################
 
 
 ######################プログラム########################
+#環境設定のファイル読み込み
+. ./config_env.ps1
+
 $lines = @()
 
 if($window_powershell){
@@ -101,7 +69,8 @@ function check(){
             #なにもしない
         }else{
             $path = $lines_origin[$idx+1]
-            if((Test-Path $path) -or ($path -match "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+")){
+            if((Test-Path $path) -or ($path -match "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+") -or ($path -like "shell:*")){
+                # ファイルが存在した or httpで始まっていた or UMPアプリだった
                 # Write-Output "ファイルはあった" + $path
             }else{
                 $gyo = $idx +1
